@@ -4,19 +4,15 @@ const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 const axios = require("axios")
 const querystring = require("querystring");
-const SocketProxyServer = require("./SocketProxyServer");
 const fs = require("fs");
 const path = require("path");
+
 app.set("env", "production");
 app.use(express.json());
 app.use(express.urlencoded());
 app.use(cookieParser());
 
-let startPort = 2080;
-let proxyServerList = [];
-
 let patches = [];
-
 async function readPatches() {
     let patchFiles = fs.readdirSync("./patches");
     for (let patchFile of patchFiles) {
