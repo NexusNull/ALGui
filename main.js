@@ -5,6 +5,8 @@ const bodyParser = require('body-parser');
 const axios = require("axios")
 const querystring = require("querystring");
 const SocketProxyServer = require("./SocketProxyServer");
+const fs = require("fs");
+const path = require("path");
 app.set("env", "production");
 app.use(express.json());
 app.use(express.urlencoded());
@@ -13,7 +15,19 @@ app.use(cookieParser());
 let startPort = 2080;
 let proxyServerList = [];
 
+let patches = [];
+
+async function readPatches() {
+    let patchFiles = fs.readdirSync("./patches");
+    for (let patchFile of patchFiles) {
+        let patch = require("./" + path.join("./patches/", patchFile))
+        patches.push(patch);
+    }
+}
+
+
 async function main() {
+    await readPatches();
     app.post('/api/signup_or_login', (req, res) => {
         let cookie = "";
         for (let key in req.cookies) {
@@ -70,42 +84,18 @@ async function main() {
             res.status(e.response.status).send(e.data)
             return;
         }
-
-        if (data.headers['content-type'].startsWith("text/html")) {
-            let text = data.data.toString();
-            {
-                let needle = /var server_addr="(.*?)",server_port="(.*?)";/.exec(text)
-                if (needle) {
-                    let targetHost = needle[1];
-                    let targetPort = needle[2];
-                    let port = startPort++;
-                    let socketProxy = new SocketProxyServer(port, targetHost, targetPort)
-                    socketProxy.listen();
-                    proxyServerList.push(socketProxy)
-                    text = text.replace(needle[0], `var server_addr="localhost",server_port="${port}";`)
-                    data.data = Buffer.from(text, 'utf8');
-                }
-            }
-            {
-                let needle = /var url_ip='(.*?)',url_port='(.*?)'/.exec(text)
-                if (needle) {
-                    let targetHost = needle[1];
-                    let targetPort = needle[2];
-                    let port = startPort++;
-                    let socketProxy = new SocketProxyServer(port, targetHost, targetPort)
-                    socketProxy.listen();
-                    proxyServerList.push(socketProxy)
-                    text = text.replace(needle[0], `var url_ip='localhost',url_port='${port}'`)
-                    data.data = Buffer.from(text, 'utf8');
-                }
+        let response = data.data;
+        for (let patch of patches) {
+            let result = patch({headers: data.headers}, response);
+            if (result) {
+                response = result;
             }
         }
-
         if (data.headers['content-type']) {
             res.removeHeader("content-type")
             res.setHeader("Content-Type", data.headers['content-type'])
         }
-        res.status(data.status).send(data.data);
+        res.status(data.status).send(response);
     });
     app.listen(8080, function () {
         console.log('WebServer listening on port ' + 8080 + '.');
