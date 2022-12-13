@@ -78,7 +78,6 @@ async function main() {
                     responseType: 'arraybuffer',
                     headers: {Cookie: cookie}
                 })
-                console.log(data)
             } else {
                 data = await axios.get("https://adventure.land" + req.url, {
                     responseType: 'arraybuffer',
