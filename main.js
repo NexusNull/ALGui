@@ -13,6 +13,7 @@ app.use(express.urlencoded());
 app.use(cookieParser());
 
 let patches = [];
+
 async function readPatches() {
     let patchFiles = fs.readdirSync("./patches");
     for (let patchFile of patchFiles) {
@@ -70,13 +71,24 @@ async function main() {
         for (let key in req.cookies) {
             cookie += key + "=" + req.cookies[key] + "; "
         }
-
         try {
-            data = await axios.get("https://adventure.land" + req.url, {
-                responseType: 'arraybuffer',
-                headers: {Cookie: cookie}
-            })
+            if (req.method == "POST") {
+
+                data = await axios.post("https://adventure.land" + req.url, querystring.stringify(req.body), {
+                    responseType: 'arraybuffer',
+                    headers: {Cookie: cookie}
+                })
+                console.log(data)
+            } else {
+                data = await axios.get("https://adventure.land" + req.url, {
+                    responseType: 'arraybuffer',
+                    headers: {Cookie: cookie}
+                })
+            }
+
         } catch (e) {
+            if (e.response.status !== 404)
+                console.log(e)
             res.status(e.response.status).send(e.data)
             return;
         }
@@ -87,6 +99,7 @@ async function main() {
                 response = result;
             }
         }
+
         if (data.headers['content-type']) {
             res.removeHeader("content-type")
             res.setHeader("Content-Type", data.headers['content-type'])
