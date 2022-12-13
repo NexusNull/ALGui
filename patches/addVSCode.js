@@ -15,19 +15,32 @@ module.exports = function (meta, data) {
 
         let loader = createElement(document, `<script>
             require.config({
-              paths: { vs: "https://cdn.jsdelivr.net/npm/monaco-editor@0.27.0/min/vs" }
-              });
+                paths: { vs: "https://cdn.jsdelivr.net/npm/monaco-editor@0.27.0/min/vs" }
+                });
             require(["vs/editor/editor.main"], function () {
-              var editor = monaco.editor.create(document.getElementById("codeui"), {
-                value: code,
-                language: "javascript",
-                theme: "vs-dark",
-                automaticLayout: true
-              });
-              editor.onKeyDown(()=>{
-                  code_change=true;
-              })
-              window.monacoEditor = editor; 
+                var editor = monaco.editor.create(document.getElementById("codeui"), {
+                    value: code,
+                    language: "javascript",
+                    theme: "vs-dark",
+                    automaticLayout: true
+                });
+                editor.onKeyDown(()=>{
+                    code_change=true;
+                })
+                window.monacoEditor = editor; 
+                monaco.languages.registerCompletionItemProvider("javascript", {
+                    provideCompletionItems: function(model, position, context, token){
+                        return new Promise((resolve)=>{
+                            resolve({
+                                suggestions:[{
+                                    kind: monaco.languages.CompletionItemKind.Function,
+                                    label: "smart_move",
+                                    insertText:"smart_move()"
+                                }]
+                            });
+                        })
+                    }
+                })
             });</script>`);
 
         document.body.appendChild(loader);
