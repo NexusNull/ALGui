@@ -8,7 +8,7 @@ module.exports = function (meta, data) {
         let codeui = document.getElementById("codeui")
         if (!codeui)
             return
-
+        codeui.style.padding = "0";
         codeui.removeChild(codeui.children[0])
         let script = createElement(document, "<script src=\"https://cdn.jsdelivr.net/npm/monaco-editor@0.27.0/min/vs/loader.js\"></script>");
         document.body.appendChild(script);
@@ -24,21 +24,54 @@ module.exports = function (meta, data) {
                 theme: "vs-dark",
                 automaticLayout: true
               });
+              editor.onKeyDown(()=>{
+                  code_change=true;
+              })
               window.monacoEditor = editor; 
             });</script>`);
 
         document.body.appendChild(loader);
         return Buffer.from(dom.serialize(), 'utf8');
     }
+
+    //codemirror_render.getValue()
     if (meta.headers['content-type'] && meta.headers['content-type'].startsWith("application/javascript")) {
         let text = data.toString()
-        let needle = /codemirror_render.setValue\(info.code\);/.exec(text)
-        if (needle) {
-            text = text.replace(needle[0], `monacoEditor.executeEdits("la",[{range:new monaco.Range(1,1,2000,2000), text: info.code}])`)
-        }
-        return Buffer.from(text, 'utf8');
+        let needle;
+        do {
+            needle = /codemirror_render.getValue\(\)/.exec(text)
+            if (needle) {
+                text = text.replace(needle[0], `monacoEditor.getValue()`)
+            }
+        } while (needle)
+        data = Buffer.from(text, 'utf8');
     }
 
+    if (meta.headers['content-type'] && meta.headers['content-type'].startsWith("application/javascript")) {
+        let text = data.toString()
+        let needle;
+        do {
+            needle = /codemirror_render.setValue\(info.code\);/.exec(text)
+            if (needle) {
+                text = text.replace(needle[0], `monacoEditor.executeEdits("la",[{range:new monaco.Range(1,1,2000,2000), text: info.code}])`)
+            }
+        } while (needle)
+        data = Buffer.from(text, 'utf8');
+    }
+
+    if (meta.headers['content-type'] && meta.headers['content-type'].startsWith("application/javascript")) {
+        let text = data.toString()
+        let needle
+        do {
+            needle = /codemirror_render.refresh\(\);/.exec(text)
+            if (needle) {
+                text = text.replace(needle[0], ` `)
+            }
+        } while (needle)
+        data = Buffer.from(text, 'utf8');
+    }
+
+    return data;
 }
 
 function createElement(document, html) {
