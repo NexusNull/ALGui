@@ -3,7 +3,7 @@ let startPort = 2080
 let proxyServerList = [];
 
 module.exports = function (meta, data) {
-    if (meta.headers && meta.headers['content-type'] && meta.headers['content-type'].startsWith("text/html")) {
+    if (meta.headers['content-type'] && meta.headers['content-type'].startsWith("text/html")) {
         let text = data.toString();
         let needle = /var server_addr="(.*?)",server_port="(.*?)";/.exec(text)
         if (needle) {

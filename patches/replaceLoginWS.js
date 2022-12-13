@@ -1,8 +1,9 @@
 const SocketProxyServer = require("../SocketProxyServer");
 let startPort = 3080
 let proxyServerList = [];
+
 module.exports = function (meta, data) {
-    if (meta.headers && meta.headers['content-type'] && meta.headers['content-type'].startsWith("text/html")) {
+    if (meta.headers['content-type'] && meta.headers['content-type'].startsWith("text/html")) {
         let text = data.toString();
         let needle = /var url_ip='(.*?)',url_port='(.*?)'/.exec(text)
         if (needle) {
