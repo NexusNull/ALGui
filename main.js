@@ -72,8 +72,7 @@ async function main() {
             cookie += key + "=" + req.cookies[key] + "; "
         }
         try {
-            if (req.method == "POST") {
-
+            if (req.method === "POST") {
                 data = await axios.post("https://adventure.land" + req.url, querystring.stringify(req.body), {
                     responseType: 'arraybuffer',
                     headers: {Cookie: cookie}
