@@ -40,7 +40,7 @@ async function main() {
                 for (let cookie of response.headers["set-cookie"]) {
                     let key = cookie.split(";")[0].split("=")[0];
                     let value = cookie.split(";")[0].split("=")[1];
-                    res.cookie(key, value);
+                    res.cookie(key, value, {maxAge: 1000 * 60 * 60 * 24 * 30});
                 }
             else
                 console.log(response.data)
